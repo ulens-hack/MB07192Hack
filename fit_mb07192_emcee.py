@@ -150,7 +150,7 @@ ln_like(best, my_event, parameters, False) # This allows plotting of the best mo
 print(my_event.model)
 print(end_time - start_time)
 with open("output.dat", "a") as myfile:
-    myfile.write(' '.join(
-        [my_event.best_chi2, my_event.model.parameters.s, my_event.model.parameters.q,
-        *[b if isinstance(b, float) else b.value for b in best],
-        end_time - start_time]))
+    myfile.write('{0} {1} {2} '.format(my_event.best_chi2, my_event.model.parameters.s, my_event.model.parameters.q))
+    myfile.write(' {0} {1} {2} {3} {4}'.format(*[b if isinstance(b, float) else b.value for b in best]))
+    myfile.write(' {0}\n'.format(end_time - start_time))
+    
