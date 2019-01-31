@@ -97,3 +97,17 @@ def read_other(config):
     plot = config.get(section, 'plot time').split()
     other['plot_time'] = [float(t)-2450000. for t in plot]
     return other
+    
+def read_grid_parameters(config):
+    """
+    KK: New function used for reading in the min_q, max_q and delta_q (step size)
+    for grid search.
+    Read parameters that will be used for grid search during fitting process.
+    """
+    section = 'grid parameters'
+    grid = {}
+    if section not in config:
+        return grid
+    for var in config[section]:
+        grid[var] = config.getfloat(section, var)
+    return grid
