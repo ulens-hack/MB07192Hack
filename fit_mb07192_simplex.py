@@ -106,7 +106,9 @@ other_settings = read.read_other(config)
 datasets = [MM.MulensData(file_name=f[0], phot_fmt=f[1]) for f in files]
 
 # Generate starting values of parameters.
-start = generate_random_parameters(parameters, starting, emcee_settings['n_walkers'])
+start = generate_random_parameters(parameters, starting, len(parameters)+1)
+#print(start)
+#print(np.array(start).shape)
 
 # Setup Event instance that combines model and data.
 par = dict(zip(parameters, start[0]))
@@ -124,30 +126,19 @@ def chi2_for_model(theta, event, parameters_to_fit):
     (list of str) to values from the theta list"""
     for (key, parameter) in enumerate(parameters_to_fit):
         setattr(event.model.parameters, parameter, theta[key])
+
+    print('{0:.4f} {1:.6f} {2:.7f} {3:.3f}'.format(event.get_chi2(), event.model.parameters.t_0-2450000., event.model.parameters.u_0, event.model.parameters.t_E), flush=True)
+    #print(event.model)
+
     return event.get_chi2()
 
 #nelder-mead
+print(parameters)
+start_time = datetime.now()
 result = op.minimize(chi2_for_model, x0=start,
-        args=(my_event, par), method='Nelder-Mead', tol=1e-6)
+        args=(my_event, parameters), method='Nelder-Mead', tol=1e-3)
+end_time = datetime.now()
 
-# Prepare sampler.
-n_dim = len(parameters)
-#print_models = other_settings.get('print_models', False)
-#args = (my_event, parameters, print_models)
-#sampler = emcee.EnsembleSampler(emcee_settings['n_walkers'], n_dim, ln_prob, args=args)   #mcmc
-
-# Run sampler.
-#start_time = datetime.now()
-#sampler.run_mcmc(start, emcee_settings['n_steps'])   #mcmc
-#end_time = datetime.now()
-
-# Parse results.
-#burn = emcee_settings['n_burn']
-#samples = sampler.chain[:, burn:, :].reshape((-1, n_dim))
-#r_16 = np.percentile(samples, 16, axis=0)
-#r_50 = np.percentile(samples, 50, axis=0)
-#r_84 = np.percentile(samples, 84, axis=0)
-#print("Fitted parameters:")
 print("Fitting was successful? {:}".format(result.success))
 if not result.success:
     print(result.message)
@@ -159,27 +150,18 @@ if isinstance(result.fun, np.ndarray):
         result_fun = result.fun[0]
 else:
     result_fun = result.fun
+
+print(result.x.tolist())
 print("The smallest function value: {:.3f}".format(result_fun))
 print("for parameters: {:.5f} {:.4f} {:.3f}".format(*result.x.tolist()))
-
-for i in range(n_dim):
-    if parameters[i] == 'q':
-        fmt = "{:} {:.7f} +{:.7f} -{:.7f}"
-    else:
-        fmt = "{:} {:.5f} +{:.5f} -{:.5f}"
-    print(fmt.format(parameters[i], r_50[i], r_84[i]-r_50[i], r_50[i]-r_16[i]))
-print("Smallest chi2 model:")
-best = [my_event.best_chi2_parameters[p] for p in parameters]
-print(*[b if isinstance(b, float) else b.value for b in best])
-print(my_event.best_chi2)
-end_time = datetime.now()   #get time
-
-# Plot results.
-ln_like(best, my_event, parameters, False) # This allows plotting of the best model.
-print(my_event.model)
 print(end_time - start_time)
-with open("output.dat", "a") as myfile:
-    myfile.write(' '.join(
-        [my_event.best_chi2, my_event.model.parameters.s, my_event.model.parameters.q,
-        *[b if isinstance(b, float) else b.value for b in best],
-        end_time - start_time]))
+
+print(my_event.model)
+print(my_event.get_chi2())
+my_event.plot_data(subtract_2450000=True)
+my_event.plot_model(
+    subtract_2450000=True,
+    t_start=other_settings['plot_time'][0]+2450000.,
+    t_stop=other_settings['plot_time'][1]+2450000.)
+plt.xlim(*other_settings['plot_time'])
+plt.show()
