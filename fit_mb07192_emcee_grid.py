@@ -116,8 +116,6 @@ ss = np.arange(grid_parameters['logs_min'], grid_parameters['logs_max'], grid_pa
 
 par_orig = par
 
-myfile=open("output.dat","w")
-
 for logq in qs:
     q = 10.**logq
     for logs in ss: 
@@ -164,9 +162,8 @@ for logq in qs:
         ln_like(best, my_event, parameters, False) # This allows plotting of the best model.
         print(my_event.model)
         print(end_time - start_time)
-#        with open("output.dat", "a") as myfile:
-        myfile.write('{0} | {1} {2} | '.format(my_event.best_chi2, my_event.model.parameters.s, my_event.model.parameters.q))
-        myfile.write(' {0} {1} {2} {3} {4} |'.format(*[b if isinstance(b, float) else b.value for b in best]))
-        myfile.write(' {0}\n'.format(end_time - start_time))
-
-myfile.close()
+        with open("output.dat", "a") as myfile:
+            myfile.write('{0} | {1} {2} | '.format(my_event.best_chi2, my_event.model.parameters.s, my_event.model.parameters.q))
+            myfile.write(' {0} {1} {2} {3} {4} |'.format(*[b if isinstance(b, float) else b.value for b in best]))
+            myfile.write(' {0}\n'.format(end_time - start_time))
+            myfile.close()
